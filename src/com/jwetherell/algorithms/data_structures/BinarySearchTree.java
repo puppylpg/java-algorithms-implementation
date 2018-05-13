@@ -1,14 +1,9 @@
 package com.jwetherell.algorithms.data_structures;
 
 import java.lang.reflect.Array;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.HashSet;
+import java.util.*;
 import java.util.List;
-import java.util.Random;
 import java.util.Queue;
-import java.util.Set;
 
 import com.jwetherell.algorithms.data_structures.interfaces.ITree;
 
@@ -36,6 +31,7 @@ public class BinarySearchTree<T extends Comparable<T>> implements ITree<T> {
     protected INodeCreator<T> creator = null;
 
     public enum DepthFirstSearchOrder {
+        // for bst, mid-order means in-order
         inOrder, preOrder, postOrder
     }
 
@@ -314,10 +310,14 @@ public class BinarySearchTree<T extends Comparable<T>> implements ITree<T> {
      */
     protected Node<T> getReplacementNode(Node<T> nodeToRemoved) {
         Node<T> replacement = null;
+
+        // I. the node has to children
         if (nodeToRemoved.greater != null && nodeToRemoved.lesser != null) {
             // Two children.
             // Add some randomness to deletions, so we don't always use the
             // greatest/least on deletion
+
+            // always choose the successor or predecessor will lead to an unbalanced tree
             if (modifications % 2 != 0) {
                 replacement = this.getGreatest(nodeToRemoved.lesser);
                 if (replacement == null)
@@ -328,6 +328,8 @@ public class BinarySearchTree<T extends Comparable<T>> implements ITree<T> {
                     replacement = nodeToRemoved.greater;
             }
             modifications++;
+
+            // II. the node has only one child
         } else if (nodeToRemoved.lesser != null && nodeToRemoved.greater == null) {
             // Using the less subtree
             replacement = nodeToRemoved.lesser;
@@ -335,72 +337,97 @@ public class BinarySearchTree<T extends Comparable<T>> implements ITree<T> {
             // Using the greater subtree (there is no lesser subtree, no refactoring)
             replacement = nodeToRemoved.greater;
         }
+        // III. the node has no children
+
         return replacement;
     }
 
     /**
-     * Replace nodeToRemoved with replacementNode in the tree.
+     * Replace a with b in the tree.
      * 
-     * @param nodeToRemoved
-     *            Node<T> to remove replace in the tree. nodeToRemoved should
+     * @param a
+     *            Node<T> to remove replace in the tree. a should
      *            NOT be NULL.
-     * @param replacementNode
-     *            Node<T> to replace nodeToRemoved in the tree. replacementNode
+     * @param b
+     *            Node<T> to replace a in the tree. b
      *            can be NULL.
      */
-    protected void replaceNodeWithNode(Node<T> nodeToRemoved, Node<T> replacementNode) {
-        if (replacementNode != null) {
+    protected void replaceNodeWithNode(Node<T> a, Node<T> b) {
+        if (b != null) {
             // Save for later
-            Node<T> replacementNodeLesser = replacementNode.lesser;
-            Node<T> replacementNodeGreater = replacementNode.greater;
+            Node<T> bLesser = b.lesser;
+            Node<T> bGreater = b.greater;
 
-            // Replace replacementNode's branches with nodeToRemove's branches
-            Node<T> nodeToRemoveLesser = nodeToRemoved.lesser;
-            if (nodeToRemoveLesser != null && nodeToRemoveLesser != replacementNode) {
-                replacementNode.lesser = nodeToRemoveLesser;
-                nodeToRemoveLesser.parent = replacementNode;
+            // I.
+            // b regards a's children as his children
+            // a's children regard b as their parent
+            // (but a still regards his children as his children)
+
+            // Replace b's branches with a's branches
+            Node<T> aLesser = a.lesser;
+            if (aLesser != null && aLesser != b) {
+                b.lesser = aLesser;
+                aLesser.parent = b;
             }
-            Node<T> nodeToRemoveGreater = nodeToRemoved.greater;
-            if (nodeToRemoveGreater != null && nodeToRemoveGreater != replacementNode) {
-                replacementNode.greater = nodeToRemoveGreater;
-                nodeToRemoveGreater.parent = replacementNode;
+            Node<T> aGreater = a.greater;
+            if (aGreater != null && aGreater != b) {
+                b.greater = aGreater;
+                aGreater.parent = b;
             }
 
-            // Remove link from replacementNode's parent to replacement
-            Node<T> replacementParent = replacementNode.parent;
-            if (replacementParent != null && replacementParent != nodeToRemoved) {
-                Node<T> replacementParentLesser = replacementParent.lesser;
-                Node<T> replacementParentGreater = replacementParent.greater;
-                if (replacementParentLesser != null && replacementParentLesser == replacementNode) {
-                    replacementParent.lesser = replacementNodeGreater;
-                    if (replacementNodeGreater != null)
-                        replacementNodeGreater.parent = replacementParent;
-                } else if (replacementParentGreater != null && replacementParentGreater == replacementNode) {
-                    replacementParent.greater = replacementNodeLesser;
-                    if (replacementNodeLesser != null)
-                        replacementNodeLesser.parent = replacementParent;
+            // II.
+            // b's children and b's parent know about each other
+            // (and b has no longer relation with them )
+
+            // Remove link from b's parent to b
+            Node<T> bParent = b.parent;
+            if (bParent != null && bParent != a) {
+                Node<T> bParentLesser = bParent.lesser;
+                Node<T> bParentGreater = bParent.greater;
+                // b is left child, then it at most has a right child(or its left child'll be the replacementNode)
+                if (bParentLesser != null && bParentLesser == b) {
+                    bParent.lesser = bGreater;
+                    if (bGreater != null)
+                        bGreater.parent = bParent;
+                // b is right child, then it at most has a left child
+                } else if (bParentGreater != null && bParentGreater == b) {
+                    bParent.greater = bLesser;
+                    if (bLesser != null)
+                        bLesser.parent = bParent;
                 }
             }
         }
 
-        // Update the link in the tree from the nodeToRemoved to the
-        // replacementNode
-        Node<T> parent = nodeToRemoved.parent;
+        // III.
+        // b regards a's parent as his parent
+        // a's parent regards b as his child(but the parent should know about b is it's lesser or greater child)
+        // (but a still regards his parent as his parent)
+
+        // Update the link in the tree from a to b
+        Node<T> parent = a.parent;
         if (parent == null) {
             // Replacing the root node
-            root = replacementNode;
+            root = b;
             if (root != null)
                 root.parent = null;
-        } else if (parent.lesser != null && (parent.lesser.id.compareTo(nodeToRemoved.id) == 0)) {
-            parent.lesser = replacementNode;
-            if (replacementNode != null)
-                replacementNode.parent = parent;
-        } else if (parent.greater != null && (parent.greater.id.compareTo(nodeToRemoved.id) == 0)) {
-            parent.greater = replacementNode;
-            if (replacementNode != null)
-                replacementNode.parent = parent;
+        } else if (parent.lesser != null && (parent.lesser.id.compareTo(a.id) == 0)) {
+            parent.lesser = b;
+            if (b != null)
+                b.parent = parent;
+        } else if (parent.greater != null && (parent.greater.id.compareTo(a.id) == 0)) {
+            parent.greater = b;
+            if (b != null)
+                b.parent = parent;
         }
         size--;
+
+        // FINALLY.
+        // node a should be released
+        a = null;
+
+//        System.out.println("a's parent: " + a.parent);
+//        System.out.println("a's lesser: " + a.lesser);
+//        System.out.println("a's greater: " + a.greater);
     }
 
     /**
@@ -459,21 +486,21 @@ public class BinarySearchTree<T extends Comparable<T>> implements ITree<T> {
     }
 
     /**
-     * Get an array representation of the tree in breath first search order.
+     * Get an array representation of the tree in breadth first search order.
      * 
-     * @return breath first search sorted array representing the tree.
+     * @return breadth first search sorted array representing the tree.
      */
     public T[] getBFS() { 
         return getBFS(this.root, this.size);
     }
 
     /**
-     * Get an array representation of the tree in breath first search order.
+     * Get an array representation of the tree in breadth first search order.
      * 
      * @param start rooted node
      * @param size of tree rooted at start
      * 
-     * @return breath first search sorted array representing the tree.
+     * @return breadth first search sorted array representing the tree.
      */
     public static <T extends Comparable<T>> T[] getBFS(Node<T> start, int size) {
         final Queue<Node<T>> queue = new ArrayDeque<Node<T>>();
@@ -604,7 +631,7 @@ public class BinarySearchTree<T extends Comparable<T>> implements ITree<T> {
      * {@inheritDoc}
      */
     @Override
-    public java.util.Collection<T> toCollection() {
+    public Collection<T> toCollection() {
         return (new JavaCompatibleBinarySearchTree<T>(this));
     }
 
@@ -668,6 +695,14 @@ public class BinarySearchTree<T extends Comparable<T>> implements ITree<T> {
             return getString(tree.root, "", true);
         }
 
+        /**
+         *
+         * @param node node to print
+         * @param prefix string before the node
+         * @param isTail if is the last child(the right child), print "└── ", else print "├── "
+         * @param <T> value type of the node
+         * @return string
+         */
         private static <T extends Comparable<T>> String getString(Node<T> node, String prefix, boolean isTail) {
             StringBuilder builder = new StringBuilder();
 
@@ -744,11 +779,15 @@ public class BinarySearchTree<T extends Comparable<T>> implements ITree<T> {
          * {@inheritDoc}
          */
         @Override
-        public java.util.Iterator<T> iterator() {
+        public Iterator<T> iterator() {
             return (new BinarySearchTreeIterator<T>(this.tree));
         }
 
-        private static class BinarySearchTreeIterator<C extends Comparable<C>> implements java.util.Iterator<C> {
+        /**
+         * the implementation of the underlying iterator: {@link Deque}
+         * @param <C>
+         */
+        private static class BinarySearchTreeIterator<C extends Comparable<C>> implements Iterator<C> {
 
             private BinarySearchTree<C> tree = null;
             private BinarySearchTree.Node<C> last = null;

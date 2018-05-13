@@ -9,7 +9,7 @@ import org.junit.runners.Suite.SuiteClasses;
 @SuiteClasses( {
                 AVLTreeTests.class,
                 BinaryHeapTests.class,
-                BinarySearchTreeTests.class,
+                BinarySearchTreeTest.class,
                 BTreeTests.class,
                 CompactSuffixTrieTests.class,
                 DisjointSetTests.class,

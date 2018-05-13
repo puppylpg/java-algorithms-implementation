@@ -14,7 +14,7 @@ import com.jwetherell.algorithms.data_structures.test.common.TreeTest;
 import com.jwetherell.algorithms.data_structures.test.common.Utils;
 import com.jwetherell.algorithms.data_structures.test.common.Utils.TestData;
 
-public class BinarySearchTreeTests {
+public class BinarySearchTreeTest {
 
     /**
         .....4.... <br>
@@ -138,6 +138,13 @@ public class BinarySearchTreeTests {
             bst.add(i);
         }
         bst.getDFS(DepthFirstSearchOrder.postOrder);
+    }
+
+    @Test
+    public void testRemove() {
+        System.out.println(testBST);
+        testBST.remove(2);
+        System.out.println(testBST);
     }
 
 }
