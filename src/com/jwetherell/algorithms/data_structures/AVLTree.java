@@ -52,8 +52,12 @@ public class AVLTree<T extends Comparable<T>> extends BinarySearchTree<T> {
     protected Node<T> addValue(T id) {
         Node<T> nodeToReturn = super.addValue(id);
         AVLNode<T> nodeAdded = (AVLNode<T>) nodeToReturn;
-        nodeAdded.updateHeight();
-        balanceAfterInsert(nodeAdded);
+
+        // this new added node has no children:
+        // no need to update height
+//        nodeAdded.updateHeight();
+        // no need to balance
+//        balanceAfterInsert(nodeAdded);
 
         nodeAdded = (AVLNode<T>) nodeAdded.parent;
         while (nodeAdded != null) {
@@ -80,23 +84,38 @@ public class AVLTree<T extends Comparable<T>> extends BinarySearchTree<T> {
      */
     private void balanceAfterInsert(AVLNode<T> node) {
         int balanceFactor = node.getBalanceFactor();
+
+        // need to balance
         if (balanceFactor > 1 || balanceFactor < -1) {
             AVLNode<T> child = null;
             Balance balance = null;
+            // left-heavy
             if (balanceFactor < 0) {
                 child = (AVLNode<T>) node.lesser;
                 balanceFactor = child.getBalanceFactor();
-                if (balanceFactor < 0)
+                // left-heavy
+                if (balanceFactor < 0) {
+                    // left-left(-heavy)
                     balance = Balance.LEFT_LEFT;
-                else 
+                }
+                else {
+                    // left-right(-heavy)
                     balance = Balance.LEFT_RIGHT;
+                }
+            // right-heavy
             } else {
                 child = (AVLNode<T>) node.greater;
                 balanceFactor = child.getBalanceFactor();
-                if (balanceFactor < 0)
+                // left-heavy
+                if (balanceFactor < 0) {
+                    // right-left(-heavy)
                     balance = Balance.RIGHT_LEFT;
-                else
+                }
+                // right-heavy
+                else {
+                    // right-right(-heavy)
                     balance = Balance.RIGHT_RIGHT;
+                }
             }
 
             if (balance == Balance.LEFT_RIGHT) {
@@ -284,44 +303,30 @@ public class AVLTree<T extends Comparable<T>> extends BinarySearchTree<T> {
          * Updates the height of this node based on it's children.
          */
         protected int updateHeight() {
-            int lesserHeight = 0;
-            if (lesser != null) {
-                AVLNode<T> lesserAVLNode = (AVLNode<T>) lesser;
-                lesserHeight = lesserAVLNode.height;
-            }
-            int greaterHeight = 0;
-            if (greater != null) {
-                AVLNode<T> greaterAVLNode = (AVLNode<T>) greater;
-                greaterHeight = greaterAVLNode.height;
-            }
+            int lesserHeight = getSubTreeHeight(lesser);
+            int greaterHeight = getSubTreeHeight(greater);
 
-            if (lesserHeight > greaterHeight) {
-                height = lesserHeight + 1;
-            } else {
-                height = greaterHeight + 1;
-            }
-            return height;
+            return height = lesserHeight > greaterHeight ? lesserHeight + 1 : greaterHeight + 1;
         }
 
         /**
-         * Get the balance factor for this node.
+         * Get the balance factor(greaterHeight - lesserHeight) for this node.
          * 
          * @return An integer representing the balance factor for this node. It
          *         will be negative if the lesser branch is longer than the
          *         greater branch.
          */
         protected int getBalanceFactor() {
-            int lesserHeight = 0;
-            if (lesser != null) {
-                AVLNode<T> lesserAVLNode = (AVLNode<T>) lesser;
-                lesserHeight = lesserAVLNode.height;
+            return getSubTreeHeight(greater) - getSubTreeHeight(lesser);
+        }
+
+        private int getSubTreeHeight(Node<T> subRoot) {
+            int height = 0;
+            if (subRoot != null) {
+                AVLNode<T> subRootAVLNode = (AVLNode<T>) subRoot;
+                height = subRootAVLNode.height;
             }
-            int greaterHeight = 0;
-            if (greater != null) {
-                AVLNode<T> greaterAVLNode = (AVLNode<T>) greater;
-                greaterHeight = greaterAVLNode.height;
-            }
-            return greaterHeight - lesserHeight;
+            return height;
         }
 
         /**

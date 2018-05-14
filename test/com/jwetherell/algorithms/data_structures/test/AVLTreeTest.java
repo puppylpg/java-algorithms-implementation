@@ -4,6 +4,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 
+import com.jwetherell.algorithms.data_structures.BTreePrinter;
 import org.junit.Test;
 
 import com.jwetherell.algorithms.data_structures.AVLTree;
@@ -13,7 +14,7 @@ import com.jwetherell.algorithms.data_structures.test.common.TreeTest;
 import com.jwetherell.algorithms.data_structures.test.common.Utils;
 import com.jwetherell.algorithms.data_structures.test.common.Utils.TestData;
 
-public class AVLTreeTests {
+public class AVLTreeTest {
 
     @Test
     public void testAVLTree() {
@@ -27,5 +28,18 @@ public class AVLTreeTests {
                                      data.unsorted, data.invalid));
         assertTrue(JavaCollectionTest.testCollection(bstCollection, Integer.class, bstName, 
                                                  data.unsorted, data.sorted, data.invalid));
+    }
+
+    @Test
+    public void testAVLTreeAdd() {
+        AVLTree<Integer> avlTree = new AVLTree<>();
+
+        int [] num = {46, 15, 20, 35, 28, 58, 18, 50, 54};
+        for (int n : num) {
+            avlTree.add(n);
+        }
+
+        System.out.println(avlTree);
+        BTreePrinter.printNode(avlTree.root());
     }
 }

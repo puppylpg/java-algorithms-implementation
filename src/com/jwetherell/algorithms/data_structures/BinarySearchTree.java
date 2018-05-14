@@ -50,6 +50,10 @@ public class BinarySearchTree<T extends Comparable<T>> implements ITree<T> {
         };
     }
 
+    public Node<T> root() {
+        return this.root;
+    }
+
     /**
      * Constructor with external Node creator.
      */
@@ -311,7 +315,7 @@ public class BinarySearchTree<T extends Comparable<T>> implements ITree<T> {
     protected Node<T> getReplacementNode(Node<T> nodeToRemoved) {
         Node<T> replacement = null;
 
-        // I. the node has to children
+        // I. the node has two children
         if (nodeToRemoved.greater != null && nodeToRemoved.lesser != null) {
             // Two children.
             // Add some randomness to deletions, so we don't always use the
